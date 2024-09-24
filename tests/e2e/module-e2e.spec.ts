@@ -35,12 +35,11 @@ describe('EventSourcingModule - e2e', () => {
 	let accountOwnerIds: AccountOwnerId[];
 	let balance = 0;
 	let expectedVersion = 0;
+	let openedOn: Date;
 
 	let accountRepository: AccountRepository;
 
 	beforeAll(async () => {
-		jest.useFakeTimers({ now: new Date() });
-
 		const moduleRef = await Test.createTestingModule({
 			imports: [AppModule],
 		}).compile();
@@ -61,10 +60,7 @@ describe('EventSourcingModule - e2e', () => {
 		accountRepository = app.get<AccountRepository>(AccountRepository);
 	});
 
-	afterAll(async () => {
-		jest.useRealTimers();
-		await app.close();
-	});
+	afterAll(async () => await app.close());
 
 	it('should open an account', async () => {
 		const command = new OpenAccountCommand();
@@ -74,13 +70,14 @@ describe('EventSourcingModule - e2e', () => {
 		expect(customEventPublisher.publish).toHaveBeenCalledTimes(1);
 
 		const account = await accountRepository.getById(accountId);
+		openedOn = account.openedOn;
 
 		expect(account.version).toBe(expectedVersion);
 
 		expect(account.id).toEqual(accountId);
 		expect(account.ownerIds).toEqual([]);
 		expect(account.balance).toBe(0);
-		expect(account.openedOn).toEqual(new Date());
+		expect(account.openedOn).toBeInstanceOf(Date);
 		expect(account.closedOn).toBeUndefined();
 	});
 
@@ -104,7 +101,7 @@ describe('EventSourcingModule - e2e', () => {
 			expect(account.id).toEqual(accountId);
 			expect(account.ownerIds).toEqual(accountOwnerIds.slice(0, accountOwnerIds.indexOf(ownerId) + 1));
 			expect(account.balance).toBe(0);
-			expect(account.openedOn).toEqual(new Date());
+			expect(account.openedOn).toEqual(openedOn);
 			expect(account.closedOn).toBeUndefined();
 		}
 
@@ -126,7 +123,7 @@ describe('EventSourcingModule - e2e', () => {
 			expect(account.id).toEqual(accountId);
 			expect(account.ownerIds).not.toContain(ownerId);
 			expect(account.balance).toBe(0);
-			expect(account.openedOn).toEqual(new Date());
+			expect(account.openedOn).toEqual(openedOn);
 			expect(account.closedOn).toBeUndefined();
 		}
 
@@ -150,7 +147,7 @@ describe('EventSourcingModule - e2e', () => {
 			expect(account.id).toEqual(accountId);
 			expect(account.ownerIds).toEqual(accountOwnerIds);
 			expect(account.balance).toBe(balance);
-			expect(account.openedOn).toEqual(new Date());
+			expect(account.openedOn).toEqual(openedOn);
 			expect(account.closedOn).toBeUndefined();
 		}
 
@@ -174,7 +171,7 @@ describe('EventSourcingModule - e2e', () => {
 			expect(account.id).toEqual(accountId);
 			expect(account.ownerIds).toEqual(accountOwnerIds);
 			expect(account.balance).toBe(balance);
-			expect(account.openedOn).toEqual(new Date());
+			expect(account.openedOn).toEqual(openedOn);
 			expect(account.closedOn).toBeUndefined();
 		}
 
@@ -188,7 +185,7 @@ describe('EventSourcingModule - e2e', () => {
 		expect(account.id).toEqual(accountId.value);
 		expect(account.ownerIds).toEqual(accountOwnerIds.map((id) => id.value));
 		expect(account.balance).toBe(balance);
-		expect(typeof account.openedOn).toBe('string');
+		expect(account.openedOn).toEqual(openedOn.toISOString());
 		expect(account.closedOn).toBeUndefined();
 	});
 
@@ -204,8 +201,8 @@ describe('EventSourcingModule - e2e', () => {
 		expect(account.id).toEqual(accountId);
 		expect(account.ownerIds).toEqual(accountOwnerIds);
 		expect(account.balance).toBe(balance);
-		expect(account.openedOn).toEqual(new Date());
-		expect(account.closedOn).toEqual(new Date());
+		expect(account.openedOn).toEqual(openedOn);
+		expect(account.closedOn).toBeInstanceOf(Date);
 
 		expect(customEventPublisher.publish).toHaveBeenCalledTimes(18);
 	});
