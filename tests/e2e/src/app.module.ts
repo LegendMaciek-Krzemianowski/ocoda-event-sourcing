@@ -20,6 +20,7 @@ import { Events, testProviders } from '@ocoda/event-sourcing-testing/e2e';
 					user: 'postgres',
 					password: 'postgres',
 					database: 'postgres',
+                    useDefaultPool: false,
 				},
 				snapshotStore: {
 					driver: PostgresSnapshotStore,
@@ -28,6 +29,7 @@ import { Events, testProviders } from '@ocoda/event-sourcing-testing/e2e';
 					user: 'postgres',
 					password: 'postgres',
 					database: 'postgres',
+                    useDefaultPool: false,
 				},
 			}),
 		}),
